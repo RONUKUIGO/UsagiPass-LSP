@@ -31,6 +31,11 @@ https://wq.wahlap.net/qrcode/req/MAIDxxxx.html?l=1730217600
 为什么需要 L2：微信本体被 Tinker 替换、WebView 由 XWeb 的独立 `DexClassLoader` 加载，
 静态 `Class.forName` 拿到的是另一份 Class 对象，静态 hook 不会触发。
 
+## 下载
+
+[Releases](https://github.com/RONUKUIGO/UsagiPass-LSP/releases) → `UsagiPass-LSP-vX.Y.Z.apk`
+（发行版：无设置界面、无桌面图标、日志固定关闭）
+
 ## 构建
 
 ```sh
