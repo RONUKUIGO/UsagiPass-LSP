@@ -1,0 +1,16 @@
+# 构建
+build/
+.gradle/
+*.apk
+*.aab
+runs/
+
+# 本机路径与内部记录（不入库）
+local.properties
+HANDOFF.md
+refs/
+notes/
+
+# IDE
+.idea/
+*.iml

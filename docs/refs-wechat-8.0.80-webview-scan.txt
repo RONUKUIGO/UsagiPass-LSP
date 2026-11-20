@@ -1,0 +1,167 @@
+# dex 数量: 18  工作目录: /tmp/wxscan
+
+## 1. WebView 继承树
+
+Lcom/tencent/xweb/WebView;  → 19 个子类
+    Lc55/n;
+    Lcom/tencent/mm/plugin/appbrand/openmaterial/ui/hybrid/OpenMaterialWebView;
+    Lcom/tencent/mm/plugin/appbrand/page/ca;
+    Lcom/tencent/mm/plugin/appbrand/page/x;
+    Lcom/tencent/mm/plugin/box/webview/BoxWebView;
+    Lcom/tencent/mm/plugin/game/luggage/page/b0;
+    Lcom/tencent/mm/plugin/game/luggage/s1;
+    Lcom/tencent/mm/plugin/product/ui/HtmlTextView2;
+    Lcom/tencent/mm/plugin/qqmail/ui/EmbedWebView;
+    Lcom/tencent/mm/plugin/websearch/webview/BaseWebSearchWebView;
+    Lcom/tencent/mm/plugin/websearch/webview/WebSearchWebView;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/s5;
+    Lcom/tencent/mm/plugin/webview/ui/tools/widget/MMWebViewWithJsApi;
+    Lcom/tencent/mm/plugin/webview/ui/tools/widget/MailMMWebView;
+    Lcom/tencent/mm/ui/widget/MMWebView;
+    Les2/f;
+    Lpy1/f0;
+    Lqk0/v;
+    Lz55/x0;
+
+Lcom/tencent/xweb/pinus/sdk/WebView;  → 1 个子类
+    La96/h0;
+
+Lcom/tencent/smtt/sdk/WebView;  → 0 个子类
+
+Landroid/webkit/WebView;  → 6 个子类
+    Lcom/tencent/luggage/bridge/impl/BridgedAndroidWebView;
+    Lcom/tencent/luggage/bridge/impl/BridgedAndroidWebViewBase;
+    Lcom/tencent/luggage/webview/default_impl/DefaultWebView;
+    Lcom/tencent/mm/plugin/appbrand/page/cb;
+    Lcom/tencent/xweb/sys/u;
+    Lio/flutter/plugins/webviewflutter/WebViewHostApiImpl$WebViewPlatformView;
+
+## 2. 自己覆写 loadUrl 的子类（静态 hook 基类抓不到的那种）
+    Lcom/tencent/mm/ui/widget/MMWebView;  loadUrl(Ljava/lang/String;)V
+    Lcom/tencent/mm/plugin/webview/ui/tools/widget/MMWebViewWithJsApi;  loadUrl(Ljava/lang/String;)V
+    Les2/f;  loadUrl(Ljava/lang/String;)V
+    Lc55/n;  loadUrl(Ljava/lang/String;)V
+    Lc55/n;  loadUrl(Ljava/lang/String; Ljava/util/Map;)V
+    Lcom/tencent/mm/plugin/game/luggage/page/b0;  loadUrl(Ljava/lang/String;)V
+    Lcom/tencent/mm/plugin/game/luggage/page/b0;  loadUrl(Ljava/lang/String; Ljava/util/Map;)V
+    Lcom/tencent/mm/plugin/game/luggage/s1;  loadUrl(Ljava/lang/String;)V
+
+## 3. 页面导航回调（302 / 页面内跳转的落点）
+    Lorg/chromium/support_lib_boundary/WebViewClientBoundaryInterface;  shouldOverrideUrlLoading(Landroid/webkit/WebView; Landroid/webkit/WebResourceRequest;)Z
+    Lcom/tencent/xweb/pinus/sdk/WebViewClient;  onPageStarted(Lcom/tencent/xweb/pinus/sdk/WebView; Ljava/lang/String; Landroid/graphics/Bitmap;)V
+    Lcom/tencent/xweb/pinus/sdk/WebViewClient;  shouldInterceptRequest(Lcom/tencent/xweb/pinus/sdk/WebView; Landroid/webkit/WebResourceRequest;)Landroid/webkit/WebResourceResponse;
+    Lcom/tencent/xweb/pinus/sdk/WebViewClient;  shouldInterceptRequest(Lcom/tencent/xweb/pinus/sdk/WebView; Ljava/lang/String;)Landroid/webkit/WebResourceResponse;
+    Lcom/tencent/xweb/pinus/sdk/WebViewClient;  shouldOverrideUrlLoading(Lcom/tencent/xweb/pinus/sdk/WebView; Landroid/webkit/WebResourceRequest;)Z
+    Lcom/tencent/xweb/pinus/sdk/WebViewClient;  shouldOverrideUrlLoading(Lcom/tencent/xweb/pinus/sdk/WebView; Ljava/lang/String;)Z
+    Lio/flutter/plugins/webviewflutter/GeneratedAndroidWebView$WebViewClientFlutterApi;  onPageStarted(Ljava/lang/Long; Ljava/lang/Long; Ljava/lang/String; Lio/flutter/plugins/webviewflutter/GeneratedAndroidWebView$WebViewClientFlutterApi$Reply;)V
+    Lio/flutter/plugins/webviewflutter/WebViewClientHostApiImpl$WebViewClientCompatImpl;  onPageStarted(Landroid/webkit/WebView; Ljava/lang/String; Landroid/graphics/Bitmap;)V
+    Lio/flutter/plugins/webviewflutter/WebViewClientHostApiImpl$WebViewClientCompatImpl;  shouldOverrideUrlLoading(Landroid/webkit/WebView; Landroid/webkit/WebResourceRequest;)Z
+    Lio/flutter/plugins/webviewflutter/WebViewClientHostApiImpl$WebViewClientCompatImpl;  shouldOverrideUrlLoading(Landroid/webkit/WebView; Ljava/lang/String;)Z
+    Lio/flutter/plugins/webviewflutter/WebViewClientHostApiImpl$WebViewClientImpl;  onPageStarted(Landroid/webkit/WebView; Ljava/lang/String; Landroid/graphics/Bitmap;)V
+    Lio/flutter/plugins/webviewflutter/WebViewClientHostApiImpl$WebViewClientImpl;  shouldOverrideUrlLoading(Landroid/webkit/WebView; Landroid/webkit/WebResourceRequest;)Z
+    Lio/flutter/plugins/webviewflutter/WebViewClientHostApiImpl$WebViewClientImpl;  shouldOverrideUrlLoading(Landroid/webkit/WebView; Ljava/lang/String;)Z
+    Lio/flutter/plugins/webviewflutter/WebViewClientFlutterApiImpl;  onPageStarted(Landroid/webkit/WebViewClient; Landroid/webkit/WebView; Ljava/lang/String; Lio/flutter/plugins/webviewflutter/GeneratedAndroidWebView$WebViewClientFlutterApi$Reply;)V
+
+## 4. 承载 H5 的 Activity / Wrapper（Intent 层拦截的观察点）
+    Lcom/tencent/mm/autogen/events/WebViewUIDestroyEvent;
+    Lcom/tencent/mm/plugin/brandservice/ui/timeline/preload/ui/ContentTmplWebViewUI;
+    Lcom/tencent/mm/plugin/fav/offline/ui/FavOfflineWebViewUI;
+    Lcom/tencent/mm/plugin/game/luggage/LuggageGameHalfWebViewUI;
+    Lcom/tencent/mm/plugin/game/luggage/LuggageGameWebViewUI$a;
+    Lcom/tencent/mm/plugin/game/luggage/LuggageGameWebViewUI;
+    Lcom/tencent/mm/plugin/game/luggage/MMLuggageGameHalfWebViewUI;
+    Lcom/tencent/mm/plugin/game/luggage/MMLuggageGameWebViewUI;
+    Lcom/tencent/mm/plugin/game/luggage/SchemeEntryLuggageGameWebViewUI;
+    Lcom/tencent/mm/plugin/game/luggage/SchemeEntryMMLuggageGameWebViewUI;
+    Lcom/tencent/mm/plugin/nfc_open/ui/NfcWebViewUI;
+    Lcom/tencent/mm/plugin/qqmail/ui/MailWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/CustomSchemeEntryMMWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/CustomSchemeEntryWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/MMWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/QRCodeIntroductionWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/TransparentWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$c;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$d;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$e;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$f;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$g;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$h;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$i;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$j;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$k;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$l;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$m;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$n;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$o;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$p;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$$q;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$1;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI$3;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/WebViewUIStyleHelper$BizFinderLineStatusChangedEventListenerImpl;
+    Lcom/tencent/mm/plugin/webview/ui/tools/emojistore/BaseEmojiStoreSearchWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/emojistore/EmojiStoreSearchWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSOSWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$$c;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$$d;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$1$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$1$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$1;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$2$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$2$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$2;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$3$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$3$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$3;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI$5;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/BaseSearchWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/CircleToSearchWebViewUI$1;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/CircleToSearchWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSBaseWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$c;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$d;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$e;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$f;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI$$g;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSHomeWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSOSMoreWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSearchTabWebViewUI$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSSearchTabWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSWeAppBaseWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSWeAppSearchWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/FTSWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMFTSSOSHomeWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMFTSSOSMoreWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMFTSSearchTabWebViewUI$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMFTSSearchTabWebViewUI$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMFTSSearchTabWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMFTSWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/MMSosWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/PreLoadWebViewUI$$a;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/PreLoadWebViewUI$$b;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/PreLoadWebViewUI$$c;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/PreLoadWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/fts/SosWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/game/GameBaseWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/game/GameChattingRoomWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/game/GameWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/game/H5GameWebViewUI;
+    Lcom/tencent/mm/plugin/webview/ui/tools/widget/MMWebViewWithJsApi;
+    Lcom/tencent/mm/plugin/webview/ui/tools/widget/MailMMWebView;
+    Lcom/tencent/mm/ui/widget/MMWebView;
+
+## 5. 关键字符串是否还在
+    rawUrl                       命中 [('classes.dex', 7), ('classes10.dex', 1), ('classes11.dex', 1), ('classes12.dex', 1), ('classes13.dex', 3), ('classes14.dex', 1), ('classes15.dex', 1), ('classes16.dex', 1), ('classes17.dex', 1), ('classes2.dex', 1), ('classes3.dex', 1), ('classes4.dex', 1), ('classes5.dex', 3), ('classes6.dex', 1), ('classes7.dex', 3), ('classes8.dex', 25), ('classes9.dex', 1)]
+    shortUrl                     命中 [('classes.dex', 2), ('classes11.dex', 1), ('classes15.dex', 1), ('classes2.dex', 4), ('classes6.dex', 1), ('classes7.dex', 2)]
+    qrcode/req                   未找到
+    wahlap                       未找到
+    sys-all                      未找到
+    wc_auth/oauth/callback       未找到
+    maimai-dx                    未找到
+    xweb_                        命中 [('classes.dex', 1), ('classes11.dex', 2), ('classes12.dex', 3), ('classes13.dex', 25), ('classes14.dex', 135), ('classes15.dex', 6), ('classes16.dex', 6), ('classes17.dex', 10), ('classes18.dex', 1), ('classes7.dex', 6), ('classes8.dex', 8), ('classes9.dex', 30)]
