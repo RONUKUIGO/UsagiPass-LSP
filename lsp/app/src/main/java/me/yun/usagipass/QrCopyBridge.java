@@ -38,7 +38,7 @@ final class QrCopyBridge {
                     }
                     ClipboardManager cm = (ClipboardManager) app.getSystemService(Context.CLIPBOARD_SERVICE);
                     if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("SGWCMAID", v));
-                    Toast.makeText(app, "已复制 " + v, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(app, "已复制登录ID", Toast.LENGTH_SHORT).show();
                 } catch (Throwable ignored) {
                 }
             });

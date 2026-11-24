@@ -40,7 +40,7 @@ import io.github.libxposed.api.XposedModuleInterface;
 public class ModuleMain extends XposedModule {
 
     public static final String TAG = "UsagiPass";
-    public static final String VERSION = "0.7.1";
+    public static final String VERSION = "0.7.2";
     static final String TARGET_PKG = "com.tencent.mm";
     static final String PREF_NAME = "usagipass";
     /** 开发版才有设置界面与日志开关；发行版行为写死（改写常开、详细日志常关） */
