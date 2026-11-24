@@ -40,7 +40,7 @@ import io.github.libxposed.api.XposedModuleInterface;
 public class ModuleMain extends XposedModule {
 
     public static final String TAG = "UsagiPass";
-    public static final String VERSION = "0.7.0";
+    public static final String VERSION = "0.7.1";
     static final String TARGET_PKG = "com.tencent.mm";
     static final String PREF_NAME = "usagipass";
     /** 开发版才有设置界面与日志开关；发行版行为写死（改写常开、详细日志常关） */
@@ -69,7 +69,8 @@ public class ModuleMain extends XposedModule {
     private final Set<String> hookedClasses = new HashSet<>();
     private final Set<Integer> bridged = new HashSet<>();   // 已注入 JS 桥的 WebView（identityHashCode）
 
-    /** 页面里注入的长按复制脚本：长按二维码 → 复制 SGWC+maid（即 SGWCMAID…） */
+    /** 页面里注入的脚本：**双击**二维码 → 复制 SGWC+maid（即 SGWCMAID…）。
+     *  用双击而不是长按，避免和微信自己的长按图片菜单抢手势。 */
     private static final String QR_JS = """
             (function(){
               if (window.__usagiQrCopy) return true;
@@ -91,19 +92,35 @@ public class ModuleMain extends XposedModule {
                 var n = (t.tagName || '').toUpperCase();
                 return n === 'IMG' || n === 'CANVAS';
               }
-              document.addEventListener('contextmenu', function(e){
+              document.addEventListener('dblclick', function(e){
                 if (!tgt(e.target)) return;
                 e.preventDefault();
                 try { e.stopPropagation(); } catch (x) {}
                 fire();
               }, true);
-              var t0 = 0, moved = false;
-              document.addEventListener('touchstart', function(){ t0 = Date.now(); moved = false; }, true);
-              document.addEventListener('touchmove', function(){ moved = true; }, true);
+              var last = 0, lx = 0, ly = 0;
               document.addEventListener('touchend', function(e){
-                var dt = Date.now() - t0; t0 = 0;
-                if (dt >= 500 && dt <= 3000 && !moved && tgt(e.target)) fire();
+                if (!tgt(e.target)) return;
+                var now = Date.now();
+                var t = (e.changedTouches && e.changedTouches[0]) || null;
+                var x = t ? t.clientX : 0, y = t ? t.clientY : 0;
+                if (now - last <= 380 && Math.abs(x - lx) < 60 && Math.abs(y - ly) < 60) {
+                  last = 0;
+                  try { e.preventDefault(); } catch (x2) {}
+                  fire();
+                } else {
+                  last = now; lx = x; ly = y;
+                }
               }, true);
+              function noZoom(){
+                var ns = document.querySelectorAll('img, canvas');
+                for (var i = 0; i < ns.length; i++) {
+                  try { ns[i].style.touchAction = 'manipulation'; } catch (e) {}
+                }
+              }
+              noZoom();
+              setTimeout(noZoom, 1200);
+              setTimeout(noZoom, 3000);
               return true;
             })();
             """;
@@ -639,9 +656,9 @@ public class ModuleMain extends XposedModule {
         throw new NoSuchMethodException(name + " on " + target.getClass());
     }
 
-    // ---------------------------------------------------------------- 长按二维码复制 SGWCMAID
+    // ---------------------------------------------------------------- 双击二维码复制 SGWCMAID
 
-    /** 只在 up.turou.fun 的页面注入：桥 + 长按脚本（分多轮，SPA 渲染慢也能挂上） */
+    /** 只在 up.turou.fun 的页面注入：桥 + 双击脚本（分多轮，SPA 渲染慢也能挂上） */
     private void injectQrCopy(String url, Object view) {
         if (url == null || view == null) return;
         if (!url.startsWith("https://up.turou.fun")) return;
