@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import android.view.View;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import io.github.libxposed.api.XposedModuleInterface;
 public class ModuleMain extends XposedModule {
 
     public static final String TAG = "UsagiPass";
-    public static final String VERSION = "0.6.0";
+    public static final String VERSION = "0.7.0";
     static final String TARGET_PKG = "com.tencent.mm";
     static final String PREF_NAME = "usagipass";
     /** 开发版才有设置界面与日志开关；发行版行为写死（改写常开、详细日志常关） */
@@ -66,6 +67,46 @@ public class ModuleMain extends XposedModule {
     private volatile Context appCtx;
     private final Set<String> seen = new HashSet<>();
     private final Set<String> hookedClasses = new HashSet<>();
+    private final Set<Integer> bridged = new HashSet<>();   // 已注入 JS 桥的 WebView（identityHashCode）
+
+    /** 页面里注入的长按复制脚本：长按二维码 → 复制 SGWC+maid（即 SGWCMAID…） */
+    private static final String QR_JS = """
+            (function(){
+              if (window.__usagiQrCopy) return true;
+              window.__usagiQrCopy = 1;
+              function payload(){
+                try {
+                  var m = new URLSearchParams(location.search).get('maid') || '';
+                  return m ? ('SGWC' + m) : '';
+                } catch (e) { return ''; }
+              }
+              function fire(){
+                var p = payload();
+                if (!p) return;
+                try { if (window.UsagiPassBridge) { window.UsagiPassBridge.copy(p); return; } } catch (e) {}
+                try { console.log('USAGI_COPY:' + p); } catch (e) {}
+              }
+              function tgt(t){
+                if (!t) return false;
+                var n = (t.tagName || '').toUpperCase();
+                return n === 'IMG' || n === 'CANVAS';
+              }
+              document.addEventListener('contextmenu', function(e){
+                if (!tgt(e.target)) return;
+                e.preventDefault();
+                try { e.stopPropagation(); } catch (x) {}
+                fire();
+              }, true);
+              var t0 = 0, moved = false;
+              document.addEventListener('touchstart', function(){ t0 = Date.now(); moved = false; }, true);
+              document.addEventListener('touchmove', function(){ moved = true; }, true);
+              document.addEventListener('touchend', function(e){
+                var dt = Date.now() - t0; t0 = 0;
+                if (dt >= 500 && dt <= 3000 && !moved && tgt(e.target)) fire();
+              }, true);
+              return true;
+            })();
+            """;
     private volatile boolean installed = false;
 
     // ------------------------------------------------------------------ 入口
@@ -584,6 +625,58 @@ public class ModuleMain extends XposedModule {
         }
     }
 
+
+    /** 沿继承链找方法并调用（xweb / pinus 的方法常是继承来的） */
+    private static Object invokeDeep(Object target, String name, Class<?>[] types, Object... args) throws Throwable {
+        for (Class<?> c = target.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            try {
+                Method m = c.getDeclaredMethod(name, types);
+                if (!m.isAccessible()) m.setAccessible(true);
+                return m.invoke(target, args);
+            } catch (NoSuchMethodException ignored) {
+            }
+        }
+        throw new NoSuchMethodException(name + " on " + target.getClass());
+    }
+
+    // ---------------------------------------------------------------- 长按二维码复制 SGWCMAID
+
+    /** 只在 up.turou.fun 的页面注入：桥 + 长按脚本（分多轮，SPA 渲染慢也能挂上） */
+    private void injectQrCopy(String url, Object view) {
+        if (url == null || view == null) return;
+        if (!url.startsWith("https://up.turou.fun")) return;
+        if (!(view instanceof View)) return;
+        final View v = (View) view;
+        final int id = System.identityHashCode(view);
+
+        // 桥只需装一次；放在页面加载之前效果最好
+        synchronized (bridged) {
+            if (bridged.add(id)) {
+                try {
+                    Context ctx = v.getContext();
+                    invokeDeep(v, "addJavascriptInterface",
+                            new Class<?>[]{Object.class, String.class},
+                            new QrCopyBridge(ctx), QrCopyBridge.NAME);
+                    log(Log.INFO, TAG, "qr-copy bridge on " + v.getClass().getSimpleName());
+                } catch (Throwable t) {
+                    log(Log.WARN, TAG, "bridge inject failed: " + t);
+                }
+            }
+        }
+
+        for (long delay : new long[]{900, 1800, 3200, 5200, 8000}) {
+            v.postDelayed(() -> {
+                try {
+                    invokeDeep(v, "evaluateJavascript",
+                            new Class<?>[]{String.class, android.webkit.ValueCallback.class},
+                            QR_JS, null);
+                } catch (Throwable t) {
+                    log(Log.WARN, TAG, "qr js inject failed: " + t);
+                }
+            }, delay);
+        }
+    }
+
     /** 统一：替换第 0 个 String 参数 */
     private int hookArg0(Method m, final String from) {
         try {
@@ -592,13 +685,20 @@ public class ModuleMain extends XposedModule {
                     .intercept(chain -> {
                         try {
                             List<Object> args = chain.getArgs();
+                            Object self = chain.getThisObject();
                             if (args != null && !args.isEmpty() && args.get(0) instanceof String) {
-                                String nu = handle((String) args.get(0), from);
+                                String raw = (String) args.get(0);
+                                String nu = handle(raw, from);
                                 if (nu != null) {
                                     Object[] arr = args.toArray();
                                     arr[0] = nu;
-                                    return chain.proceed(arr);
+                                    Object r = chain.proceed(arr);
+                                    injectQrCopy(nu, self);
+                                    return r;
                                 }
+                                Object r = chain.proceed();
+                                injectQrCopy(raw, self);
+                                return r;
                             }
                         } catch (Throwable t) {
                             log(Log.WARN, TAG, "loadurl body: " + t);

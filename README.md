@@ -20,6 +20,12 @@ https://wq.wahlap.net/qrcode/req/MAIDxxxx.html?l=1730217600
 
 规则与 UsagiPass 服务端 `server/plugins/mitmproxy.ts` 逐行对齐。
 
+## 长按复制登录 ID
+
+UsagiPass 页面上的二维码内容是 `SGWC` + `maid`（即 `SGWCMAID…`）。
+模块在 `up.turou.fun` 页面注入一个 JS 桥：**长按二维码图片**即把该 ID 复制到剪贴板（并弹一条 Toast），
+不需要扫码解码、也不会跳走页面。
+
 ## 三层拦截
 
 | 层 | 挂点 | 抓什么 |
